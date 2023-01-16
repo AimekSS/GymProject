@@ -2,8 +2,7 @@
 using CourseProject.MenuObjects;
 using CourseProject.Users;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+
 namespace CourseProject
 {
     internal class Gym

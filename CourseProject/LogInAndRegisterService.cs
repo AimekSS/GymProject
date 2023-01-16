@@ -1,6 +1,5 @@
 ﻿using CourseProject.HelpersAndConstants;
 using CourseProject.Users;
-using Newtonsoft.Json;
 
 namespace CourseProject
 {

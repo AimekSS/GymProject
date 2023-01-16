@@ -1,6 +1,5 @@
 ﻿using ConsoleTables;
 using CourseProject.HelpersAndConstants;
-using Newtonsoft.Json;
 
 namespace CourseProject.MenuObjects
 {

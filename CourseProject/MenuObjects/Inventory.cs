@@ -1,5 +1,13 @@
-﻿namespace CourseProject.MenuObjects
+﻿using CourseProject.Users;
+using System.Text.Json.Serialization;
+
+namespace CourseProject.MenuObjects
 {
+    [JsonDerivedType(typeof(Coach), typeDiscriminator: "Coach")]
+    [JsonDerivedType(typeof(FreeWeights), typeDiscriminator: "FreeWeights")]
+    [JsonDerivedType(typeof(StrengthTraining), typeDiscriminator: "StrengthTraining")]
+    [JsonDerivedType(typeof(SwedenWallsAndTurns), typeDiscriminator: "SwedenWallsAndTurns")]
+
     internal class Inventory
     {
         public string Category { get; set; }

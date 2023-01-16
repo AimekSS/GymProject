@@ -1,7 +1,5 @@
 ﻿using CourseProject.HelpersAndConstants;
 using CourseProject.Users;
-using Newtonsoft.Json;
-using System.Numerics;
 using System.Text.RegularExpressions;
 
 namespace CourseProject
