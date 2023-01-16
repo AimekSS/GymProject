@@ -2,6 +2,9 @@
 {
     internal class StrengthTraining : Inventory
     {
-        public StrengthTraining(string category, string name, int quantity) : base(category, name, quantity) { }
+        public StrengthTraining(string category, string name, int quantity) : base(category, name, quantity) 
+        { 
+
+        }
     }
 }

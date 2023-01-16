@@ -1,64 +1,28 @@
-﻿using CourseProject.Users;
+﻿using CourseProject.HelpersAndConstants;
+using CourseProject.Users;
 using Newtonsoft.Json;
 
 namespace CourseProject
 {
-    internal class LogInAndRegister
+    internal class LogInAndRegisterService
     {
-        public List<Visitor> visitorsData = new List<Visitor>();
-        public List<Coach> coachesData = new List<Coach>();
-
-        public Dictionary<string, string> visitorsCredentials = new Dictionary<string, string>();
-        public Dictionary<string, string> coachesCredentials = new Dictionary<string, string>();
-
-        public static string folderName = "MyJson";
-
-        public static string visitorsFileName = "visitors.json";
-        public static string coachesFileName = "coaches.json";
-
-        public static string visitorsCredentialsFileName = "visitorsCredentials.json";
-        public static string coachesCredentialsFileName = "coachesCredentials.json";
-
-        public string visitorsJsonPath = GetFilePath(folderName, visitorsFileName);
-        public string coachesJsonPath = GetFilePath(folderName, coachesFileName);
-        public string visitorsCredentialsJsonPath = GetFilePath(folderName, visitorsCredentialsFileName);
-        public string coachesCredentialsJsonPath = GetFilePath(folderName, coachesCredentialsFileName);
-
-        public User Login()
+        public User Login(Gym gym)
         {
             Console.Write("Enter your login: ");
             string login = Console.ReadLine();
             Console.Write("Enter your password: ");
             string password = Console.ReadLine();
 
-            try
-            {
-                string jsonVisitorCredentialsData = File.ReadAllText(visitorsCredentialsJsonPath);
-                visitorsCredentials = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonVisitorCredentialsData);
-            }
-            catch (FileNotFoundException)
-            {
-                Console.WriteLine("There are no users yet in the system\nSorry, but you would have to register a user first");
-            }
+            gym.visitorsCredentials = JsonHelper.CheckForVisitorCredentials(gym.visitorsCredentials, "There are no users yet in the system\nSorry, but you would have to register a user first");
+            gym.coachesCredentials = JsonHelper.CheckForCoachesCredentials(gym.coachesCredentials, "There are no coaches yet in the system\nSorry");
 
-            try
-            {
-                string jsonCoachCredentialsData = File.ReadAllText(coachesCredentialsJsonPath);
-                coachesCredentials = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonCoachCredentialsData);
-            }
-            catch (FileNotFoundException)
-            {
-                Console.WriteLine("There are no coaches yet in the system\nSorry");
-            }
-
-            foreach (var coach in coachesCredentials)
+            foreach (var coach in gym.coachesCredentials)
             {
                 if (coach.Key == login && coach.Value == password)
                 {
-                    string jsonCoachData = File.ReadAllText(coachesJsonPath);
-                    coachesData = JsonConvert.DeserializeObject<List<Coach>>(jsonCoachData);
+                    gym.coachesData = JsonHelper.GetCoachesData();
 
-                    foreach (var myCoach in coachesData)
+                    foreach (var myCoach in gym.coachesData)
                     {
                         if (login == myCoach.Login)
                         {
@@ -68,14 +32,13 @@ namespace CourseProject
                 }
             }
 
-            foreach (var visitor in visitorsCredentials)
+            foreach (var visitor in gym.visitorsCredentials)
             {
                 if (visitor.Key == login && visitor.Value == password)
                 {
-                    string jsonVisitorData = File.ReadAllText(visitorsJsonPath);
-                    visitorsData = JsonConvert.DeserializeObject<List<Visitor>>(jsonVisitorData);
+                    gym.visitorsData = JsonHelper.GetVisitorsData();
 
-                    foreach (var myVisitor in visitorsData)
+                    foreach (var myVisitor in gym.visitorsData)
                     {
                         if (login == myVisitor.Login)
                         {
@@ -88,9 +51,9 @@ namespace CourseProject
             return null;
         }
 
-        public User Register()
+        public User Register(Gym gym)
         {
-            bool userIsACoach;
+            bool IsUserCoach;
 
             Console.WriteLine("If you are a coach, you could register a coach account directly");
             Console.WriteLine("1. Register a coach account (requires a secret key)");
@@ -114,7 +77,7 @@ namespace CourseProject
                         }
                         else if (registrationPick == "2")
                         {
-                            userIsACoach = false;
+                            IsUserCoach = false;
                             break;
                         }
                         else
@@ -127,71 +90,42 @@ namespace CourseProject
                     {
                         Console.Clear();
                         Console.WriteLine("Creating a coach account");
-                        userIsACoach = true;
+                        IsUserCoach = true;
                         break;
                     }
                 }
             }
             else
             {
-                userIsACoach = false;
+                IsUserCoach = false;
             }
 
-            if (userIsACoach)
+            if (IsUserCoach)
             {
-                Coach newCoach = new Coach(userIsACoach);
+                Coach newCoach = new Coach(IsUserCoach);
+                gym.coachesData = JsonHelper.CheckForCoachesData(gym.coachesData, "No files to read coaches data from\nCongratulations you are our first coach!");
 
-                try
-                {
-                    string jsonCoachData = File.ReadAllText(coachesJsonPath);
-                    coachesData = JsonConvert.DeserializeObject<List<Coach>>(jsonCoachData);
-                }
-                catch (FileNotFoundException)
-                {
-                    Console.WriteLine("No files to read coaches data from\nCongratulations you are our first coach!");
-                }
-
-                if (coachesData.Count == 0)
+                if (gym.coachesData.Count == 0)
                 {
                     newCoach.Id = 1;
                 }
                 else
                 {
-                    newCoach.Id = coachesData.Count + 1;
+                    newCoach.Id = gym.coachesData.Count + 1;
                 }
 
-                newCoach.VerifyLogin(newCoach.GetLoginAndPassword()[0]);
+                newCoach.VerifyLogin(newCoach.Login);
 
-                string[] userCredentials = newCoach.GetLoginAndPassword();
-
-                try
-                {
-                    string jsonVisitorCredentialsData = File.ReadAllText(visitorsCredentialsJsonPath);
-                    visitorsCredentials = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonVisitorCredentialsData);
-                }
-                catch (FileNotFoundException)
-                {
-                    Console.WriteLine("No files to read credentials data from for visitors\nPlease create instances of one");
-                }
-
-                try
-                {
-                    string jsonCoachCredentialsData = File.ReadAllText(coachesCredentialsJsonPath);
-                    coachesCredentials = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonCoachCredentialsData);
-                }
-                catch (FileNotFoundException)
-                {
-                    Console.WriteLine("No files to read credentials data from for coach\nPlease create instances of one");
-                }
+                gym.visitorsCredentials=JsonHelper.CheckForVisitorCredentials(gym.visitorsCredentials, "No files to read credentials data from for visitors\nPlease create instances of one");
+                gym.coachesCredentials=JsonHelper.CheckForCoachesCredentials(gym.coachesCredentials, "No files to read credentials data from for coach\nPlease create instances of one");
 
                 for (; ; )
                 {
-                    if (visitorsCredentials.ContainsKey(userCredentials[0]) || coachesCredentials.ContainsKey(userCredentials[0]))
+                    if (gym.visitorsCredentials.ContainsKey(newCoach.Login) || gym.coachesCredentials.ContainsKey(newCoach.Login))
                     {
                         Console.WriteLine("The login you have typed is already taken\nPlease create a different login");
                         Console.WriteLine("New Login: ");
                         newCoach.VerifyLogin(Console.ReadLine());
-                        userCredentials = newCoach.GetLoginAndPassword();
                     }
                     else
                     {
@@ -199,76 +133,39 @@ namespace CourseProject
                     }
                 }
 
-                coachesData.Add(newCoach);
-                string coachJson = JsonConvert.SerializeObject(coachesData);
-                File.WriteAllText(coachesJsonPath, coachJson);
-
                 Console.WriteLine("\nPassword:");
-                userCredentials[1] = Console.ReadLine();
-                newCoach.VerifyPassword(userCredentials[1]);
-                coachesCredentials.Add(userCredentials[0], userCredentials[1]);
-                string coachesCredentialsJson = JsonConvert.SerializeObject(coachesCredentials);
-
-                File.WriteAllText(coachesCredentialsJsonPath, coachesCredentialsJson);
+                newCoach.Password = Console.ReadLine();
+                newCoach.VerifyPassword(newCoach.Password);
                 Console.WriteLine("You have successfully created a new coach account");
 
                 return newCoach;
             }
             else
             {
-                Visitor newVisitor = new Visitor(userIsACoach);
+                Visitor newVisitor = new Visitor(IsUserCoach);
+                gym.visitorsData = JsonHelper.CheckForVisitorsData(gym.visitorsData, "No files to read users data from\nCongratulations you are our first user!");
 
-                try
-                {
-                    string jsonVisitorData = File.ReadAllText(visitorsJsonPath);
-                    visitorsData = JsonConvert.DeserializeObject<List<Visitor>>(jsonVisitorData);
-                }
-                catch (FileNotFoundException)
-                {
-                    Console.WriteLine("No files to read users data from\nCongratulations you are our first user!");
-                }
-
-                if (visitorsData.Count == 0)
+                if (gym.visitorsData.Count == 0)
                 {
                     newVisitor.Id = 1;
                 }
                 else
                 {
-                    newVisitor.Id = visitorsData.Count + 1;
+                    newVisitor.Id = gym.visitorsData.Count + 1;
                 }
 
-                newVisitor.VerifyLogin(newVisitor.GetLoginAndPassword()[0]);
+                newVisitor.VerifyLogin(newVisitor.Login);
 
-                string[] userCredentials = newVisitor.GetLoginAndPassword();
-
-                try
-                {
-                    string jsonVisitorCredentialsData = File.ReadAllText(visitorsCredentialsJsonPath);
-                    visitorsCredentials = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonVisitorCredentialsData);
-                }
-                catch (FileNotFoundException)
-                {
-                    Console.WriteLine("No files to read credentials data from for visitors\nPlease create instances of one");
-                }
-
-                try
-                {
-                    string jsonCoachCredentialsData = File.ReadAllText(coachesCredentialsJsonPath);
-                    coachesCredentials = JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonCoachCredentialsData);
-                }
-                catch (FileNotFoundException)
-                {
-                    Console.WriteLine("No files to read credentials data from for coach\nPlease create instances of one");
-                }
+                gym.visitorsCredentials=JsonHelper.CheckForVisitorCredentials(gym.visitorsCredentials, "No files to read credentials data from for visitors\nPlease create instances of one");
+                gym.coachesCredentials=JsonHelper.CheckForCoachesCredentials(gym.coachesCredentials, "No files to read credentials data from for coach\nPlease create instances of one");
 
                 for (; ; )
                 {
-                    if (visitorsCredentials.ContainsKey(userCredentials[0]) || coachesCredentials.ContainsKey(userCredentials[0]))
+                    if (gym.visitorsCredentials.ContainsKey(newVisitor.Login) || gym.coachesCredentials.ContainsKey(newVisitor.Login))
                     {
                         Console.WriteLine("The login you have typed is already taken\nPlease create a different login");
                         Console.WriteLine("New Login: ");
                         newVisitor.VerifyLogin(Console.ReadLine());
-                        userCredentials = newVisitor.GetLoginAndPassword();
                     }
                     else
                     {
@@ -276,28 +173,13 @@ namespace CourseProject
                     }
                 }
 
-                visitorsData.Add(newVisitor);
-                string visitorJson = JsonConvert.SerializeObject(visitorsData);
-                File.WriteAllText(visitorsJsonPath, visitorJson);
-
                 Console.WriteLine("\nPassword:");
-                userCredentials[1] = Console.ReadLine();
-                newVisitor.VerifyPassword(userCredentials[1]);
-                visitorsCredentials.Add(userCredentials[0], userCredentials[1]);
-                string visitorsCredentialsJson = JsonConvert.SerializeObject(visitorsCredentials);
-
-                File.WriteAllText(visitorsCredentialsJsonPath, visitorsCredentialsJson);
+                newVisitor.Password = Console.ReadLine();
+                newVisitor.VerifyPassword(newVisitor.Password);
                 Console.WriteLine("You have successfully created a new user\nFree subscription is issued");
 
                 return newVisitor;
             }
-        }
-
-        public static string GetFilePath(string folderName, string fileName)
-        {
-            string path = Path.Combine($"..\\..\\..\\{folderName}", fileName);
-
-            return path;
         }
     }
 }

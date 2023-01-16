@@ -1,34 +1,26 @@
 ﻿using ConsoleTables;
+using CourseProject.HelpersAndConstants;
 using Newtonsoft.Json;
 
 namespace CourseProject.MenuObjects
 {
-    internal class InventoryList
+    internal class InventoryListHelper
     {
-        public List<Inventory> cardioList = new List<Inventory>();
-        public List<Inventory> freeWeightsList = new List<Inventory>();
-        public List<Inventory> strengthTrainingList = new List<Inventory>();
-        public List<Inventory> swedenWallsAndTurnsList = new List<Inventory>();
-        public List<List<Inventory>> equipmentList = new List<List<Inventory>>();
-
-        public static string folderName = "MyJson";
-        public static string equipmentFileName = "equipment.json";
-        public string equipmentJsonPath = GetFilePath(folderName, equipmentFileName);
         public ConsoleTable table;
 
-        public void GroupingByCriterias()
+        public void GroupingByCriterias(Gym gym)
         {
-            ShowInventory("null");
+            ShowInventoryItems("null",gym);
             Console.WriteLine("By which criteria would you like to sort?");
             Console.WriteLine("1. ID\n2. Name\n3. Quantity");
 
             string userPick = Console.ReadLine();
             List<Inventory> mergedList;
-            table = new ConsoleTable("Id", "Category", "Name", "Quantity");
-            int c = cardioList.Count;
-            int st = strengthTrainingList.Count;
-            int fw = freeWeightsList.Count;
-            int swat = swedenWallsAndTurnsList.Count;
+            table = new ConsoleTable(Constants.columnNames);
+            int cardioItemsQuantity = gym.cardioList.Count;
+            int strengthTrainingItemsQuantity = gym.strengthTrainingList.Count;
+            int freeWeightsItemsQuantity = gym.freeWeightsList.Count;
+            int swedenWallsAndTurnsItemsQuantity = gym.swedenWallsAndTurnsList.Count;
 
             for (; ; )
             {
@@ -37,7 +29,7 @@ namespace CourseProject.MenuObjects
                 {
                     while (true)
                     {
-                        foreach (var i in equipmentList)
+                        foreach (var i in gym.equipmentList)
                         {
                             try
                             {
@@ -50,12 +42,12 @@ namespace CourseProject.MenuObjects
 
                             }
                         }
-                        c--;
-                        st--;
-                        fw--;
-                        swat--;
+                        cardioItemsQuantity--;
+                        strengthTrainingItemsQuantity--;
+                        freeWeightsItemsQuantity--;
+                        swedenWallsAndTurnsItemsQuantity--;
 
-                        if (c <= 0 && st <= 0 && fw <= 0 && swat <= 0)
+                        if (cardioItemsQuantity <= 0 && strengthTrainingItemsQuantity <= 0 && freeWeightsItemsQuantity <= 0 && swedenWallsAndTurnsItemsQuantity <= 0)
                         {
                             break;
                         }
@@ -69,7 +61,7 @@ namespace CourseProject.MenuObjects
                 {
                     mergedList = new List<Inventory>();
 
-                    foreach (var list in equipmentList)
+                    foreach (var list in gym.equipmentList)
                     {
                         mergedList.AddRange(list);
                     }
@@ -88,7 +80,7 @@ namespace CourseProject.MenuObjects
                 {
                     mergedList = new List<Inventory>();
 
-                    foreach (var list in equipmentList)
+                    foreach (var list in gym.equipmentList)
                     {
                         mergedList.AddRange(list);
                     }
@@ -112,18 +104,11 @@ namespace CourseProject.MenuObjects
             }
         }
 
-        public static string GetFilePath(string folderName, string fileName)
+        public string ShowInventoryItems(string s, Gym gym)
         {
-            string path = Path.Combine($"..\\..\\..\\{folderName}", fileName);
-
-            return path;
-        }
-
-        public string ShowInventory(string s)
-        {
-            GetJsonData();
+            gym.GetDataForEquipmentLists();
             Console.WriteLine();
-            table = new ConsoleTable("Id", "Category", "Name", "Quantity");
+            table = new ConsoleTable(Constants.columnNames);
 
             for (; ; )
             {
@@ -131,7 +116,7 @@ namespace CourseProject.MenuObjects
                 {
                     if (s == "null")
                     {
-                        foreach (var e in equipmentList)
+                        foreach (var e in gym.equipmentList)
                         {
                             foreach (var i in e)
                             {
@@ -145,7 +130,7 @@ namespace CourseProject.MenuObjects
                     }
                     else if (s == "1")
                     {
-                        foreach (var i in equipmentList[0])
+                        foreach (var i in gym.equipmentList[0])
                         {
                             table.AddRow(i.ID, i.Category, i.Name, Convert.ToString(i.Quantity));
                         }
@@ -156,7 +141,7 @@ namespace CourseProject.MenuObjects
                     }
                     else if (s == "2")
                     {
-                        foreach (var i in equipmentList[1])
+                        foreach (var i in gym.equipmentList[1])
                         {
                             table.AddRow(i.ID, i.Category, i.Name, Convert.ToString(i.Quantity));
                         }
@@ -167,7 +152,7 @@ namespace CourseProject.MenuObjects
                     }
                     else if (s == "3")
                     {
-                        foreach (var i in equipmentList[2])
+                        foreach (var i in gym.equipmentList[2])
                         {
                             table.AddRow(i.ID, i.Category, i.Name, Convert.ToString(i.Quantity));
                         }
@@ -178,7 +163,7 @@ namespace CourseProject.MenuObjects
                     }
                     else if (s == "4")
                     {
-                        foreach (var i in equipmentList[3])
+                        foreach (var i in gym.equipmentList[3])
                         {
                             table.AddRow(i.ID, i.Category, i.Name, Convert.ToString(i.Quantity));
                         }
@@ -203,70 +188,33 @@ namespace CourseProject.MenuObjects
             return s;
         }
 
-        public bool GetJsonData()
+        public void RemoveEquipmentItemFromjson(Gym gym)
         {
-            string equipmentJson;
-            bool exceptioFound = false;
-
-            while (true)
-            {
-                try
-                {
-                    string jsonEquipmentList = File.ReadAllText(equipmentJsonPath);
-                    equipmentList = JsonConvert.DeserializeObject<List<List<Inventory>>>(jsonEquipmentList);
-                }
-                catch (FileNotFoundException)
-                {
-                    equipmentList.Add(cardioList);
-                    equipmentList.Add(strengthTrainingList);
-                    equipmentList.Add(freeWeightsList);
-                    equipmentList.Add(swedenWallsAndTurnsList);
-
-                    exceptioFound = true;
-                    equipmentJson = JsonConvert.SerializeObject(equipmentList);
-
-                    File.WriteAllText(equipmentJsonPath, equipmentJson);
-                    break;
-                }
-
-                cardioList = equipmentList[0];
-                strengthTrainingList = equipmentList[1];
-                freeWeightsList = equipmentList[2];
-                swedenWallsAndTurnsList = equipmentList[3];
-
-                break;
-            }
-
-            return exceptioFound;
-        }
-
-        public void RemoveEquipmentItemFromjson()
-        {
-            ShowInventory("null");
+            ShowInventoryItems("null",gym);
             Console.WriteLine("Which category would you like to pick to \ndelete item from");
             Console.WriteLine("1. Cardio\n2. Strength training\n3. Free weights\n4. Sweden walls and turns");
             string userCategoryPick = Console.ReadLine();
-            string itemCategory = ShowInventory(userCategoryPick);
+            string itemCategory = ShowInventoryItems(userCategoryPick,gym);
             Console.WriteLine("Which item would you like to delete? (Pick item ID)");
             string ui = Console.ReadLine();
             bool itemExists = false;
 
-            foreach (var i in equipmentList[Convert.ToInt32(itemCategory) - 1])
+            foreach (var i in gym.equipmentList[Convert.ToInt32(itemCategory) - 1])
             {
                 if (Convert.ToString(i.ID) == ui)
                 {
                     int uiID = Convert.ToInt32(ui);
-                    equipmentList[Convert.ToInt32(itemCategory) - 1].Remove(i);
-                    if (uiID <= equipmentList[Convert.ToInt32(itemCategory) - 1].Count)
+                    gym.equipmentList[Convert.ToInt32(itemCategory) - 1].Remove(i);
+                    if (uiID <= gym.equipmentList[Convert.ToInt32(itemCategory) - 1].Count)
                     {
-                        for (int j = uiID - 1; j < equipmentList[Convert.ToInt32(itemCategory) - 1].Count; j++)
+                        for (int j = uiID - 1; j < gym.equipmentList[Convert.ToInt32(itemCategory) - 1].Count; j++)
                         {
-                            equipmentList[Convert.ToInt32(itemCategory) - 1][j].ID = j + 1;
+                            gym.equipmentList[Convert.ToInt32(itemCategory) - 1][j].ID = j + 1;
                         }
                     }
 
                     itemExists = true;
-                    AddInventoryListToList();
+                    gym.AddInventoryListToList();
 
                     break;
                 }
@@ -288,23 +236,9 @@ namespace CourseProject.MenuObjects
             }
         }
 
-        public void AddInventoryListToList()
+        public void AddInventoryItemToList(Gym gym)
         {
-            string equipmentJson;
-
-            equipmentList[0] = cardioList;
-            equipmentList[1] = strengthTrainingList;
-            equipmentList[2] = freeWeightsList;
-            equipmentList[3] = swedenWallsAndTurnsList;
-
-            equipmentJson = JsonConvert.SerializeObject(equipmentList);
-
-            File.WriteAllText(equipmentJsonPath, equipmentJson);
-        }
-
-        public void AddInventoryItemToList()
-        {
-            GetJsonData();
+            gym.GetDataForEquipmentLists();
 
             for (; ; )
             {
@@ -323,18 +257,18 @@ namespace CourseProject.MenuObjects
                         int quantity = Convert.ToInt32(Console.ReadLine());
                         Cardio cardio = new Cardio("Cardio", name, quantity);
 
-                        cardio.ID = cardioList.Count + 1;
+                        cardio.ID = gym.cardioList.Count + 1;
 
-                        if (cardioList.Count < 1)
+                        if (gym.cardioList.Count < 1)
                         {
-                            cardioList.Add(cardio);
+                            gym.cardioList.Add(cardio);
                             Console.WriteLine($"Inventory successfully added: {cardio.ID} {cardio.Category} {cardio.Name} {cardio.Quantity}");
                             Thread.Sleep(1000);
                         }
-                        else if (cardioList.Count >= 1)
+                        else if (gym.cardioList.Count >= 1)
                         {
                             bool doesNotContain = false;
-                            foreach (var c in cardioList)
+                            foreach (var c in gym.cardioList)
                             {
                                 doesNotContain = false;
                                 if (c.Name == cardio.Name)
@@ -353,7 +287,7 @@ namespace CourseProject.MenuObjects
                             {
                                 Console.WriteLine($"Inventory successfully added: {cardio.ID} {cardio.Category} {cardio.Name} {cardio.Quantity}");
                                 Thread.Sleep(1000);
-                                cardioList.Add(cardio);
+                                gym.cardioList.Add(cardio);
                             }
                         }
                     }
@@ -365,18 +299,18 @@ namespace CourseProject.MenuObjects
                         int quantity = Convert.ToInt32(Console.ReadLine());
                         StrengthTraining strengthTraining = new StrengthTraining("Strength training", name, quantity);
 
-                        strengthTraining.ID = strengthTrainingList.Count + 1;
+                        strengthTraining.ID = gym.strengthTrainingList.Count + 1;
 
-                        if (strengthTrainingList.Count < 1)
+                        if (gym.strengthTrainingList.Count < 1)
                         {
-                            strengthTrainingList.Add(strengthTraining);
+                            gym.strengthTrainingList.Add(strengthTraining);
                             Console.WriteLine($"Inventory successfully added: {strengthTraining.ID} {strengthTraining.Category} {strengthTraining.Name} {strengthTraining.Quantity}");
                             Thread.Sleep(1000);
                         }
-                        else if (strengthTrainingList.Count >= 1)
+                        else if (gym.strengthTrainingList.Count >= 1)
                         {
                             bool doesNotContain = false;
-                            foreach (var st in strengthTrainingList)
+                            foreach (var st in gym.strengthTrainingList)
                             {
                                 doesNotContain = false;
                                 if (st.Name == strengthTraining.Name)
@@ -395,7 +329,7 @@ namespace CourseProject.MenuObjects
                             {
                                 Console.WriteLine($"Inventory successfully added: {strengthTraining.ID} {strengthTraining.Category} {strengthTraining.Name} {strengthTraining.Quantity}");
                                 Thread.Sleep(1000);
-                                strengthTrainingList.Add(strengthTraining);
+                                gym.strengthTrainingList.Add(strengthTraining);
                             }
                         }
                     }
@@ -407,18 +341,18 @@ namespace CourseProject.MenuObjects
                         int quantity = Convert.ToInt32(Console.ReadLine());
                         FreeWeights freeWeights = new FreeWeights("Free weights", name, quantity);
 
-                        freeWeights.ID = freeWeightsList.Count + 1;
+                        freeWeights.ID = gym.freeWeightsList.Count + 1;
 
-                        if (freeWeightsList.Count < 1)
+                        if (gym.freeWeightsList.Count < 1)
                         {
-                            freeWeightsList.Add(freeWeights);
+                            gym.freeWeightsList.Add(freeWeights);
                             Console.WriteLine($"Inventory successfully added: {freeWeights.ID} {freeWeights.Category} {freeWeights.Name} {freeWeights.Quantity}");
                             Thread.Sleep(1000);
                         }
-                        else if (freeWeightsList.Count >= 1)
+                        else if (gym.freeWeightsList.Count >= 1)
                         {
                             bool doesNotContain = false;
-                            foreach (var fw in freeWeightsList)
+                            foreach (var fw in gym.freeWeightsList)
                             {
                                 doesNotContain = false;
                                 if (fw.Name == freeWeights.Name)
@@ -438,7 +372,7 @@ namespace CourseProject.MenuObjects
                             {
                                 Console.WriteLine($"Inventory successfully added: {freeWeights.ID} {freeWeights.Category} {freeWeights.Name} {freeWeights.Quantity}");
                                 Thread.Sleep(1000);
-                                freeWeightsList.Add(freeWeights);
+                                gym.freeWeightsList.Add(freeWeights);
                             }
                         }
                     }
@@ -450,18 +384,18 @@ namespace CourseProject.MenuObjects
                         int quantity = Convert.ToInt32(Console.ReadLine());
                         SwedenWallsAndTurns swedenWallsAndTurns = new SwedenWallsAndTurns("Sweden walls and turns", name, quantity);
 
-                        swedenWallsAndTurns.ID = swedenWallsAndTurnsList.Count + 1;
+                        swedenWallsAndTurns.ID = gym.swedenWallsAndTurnsList.Count + 1;
 
-                        if (swedenWallsAndTurnsList.Count < 1)
+                        if (gym.swedenWallsAndTurnsList.Count < 1)
                         {
-                            swedenWallsAndTurnsList.Add(swedenWallsAndTurns);
+                            gym.swedenWallsAndTurnsList.Add(swedenWallsAndTurns);
                             Console.WriteLine($"Inventory successfully added: {swedenWallsAndTurns.ID} {swedenWallsAndTurns.Category} {swedenWallsAndTurns.Name} {swedenWallsAndTurns.Quantity}");
                             Thread.Sleep(1000);
                         }
-                        else if (swedenWallsAndTurnsList.Count >= 1)
+                        else if (gym.swedenWallsAndTurnsList.Count >= 1)
                         {
                             bool doesNotContain = false;
-                            foreach (var swat in swedenWallsAndTurnsList)
+                            foreach (var swat in gym.swedenWallsAndTurnsList)
                             {
                                 doesNotContain = false;
                                 if (swat.Name == swedenWallsAndTurns.Name)
@@ -480,7 +414,7 @@ namespace CourseProject.MenuObjects
                             {
                                 Console.WriteLine($"Inventory successfully added: {swedenWallsAndTurns.ID} {swedenWallsAndTurns.Category} {swedenWallsAndTurns.Name} {swedenWallsAndTurns.Quantity}");
                                 Thread.Sleep(1000);
-                                swedenWallsAndTurnsList.Add(swedenWallsAndTurns);
+                                gym.swedenWallsAndTurnsList.Add(swedenWallsAndTurns);
                             }
                         }
                     }
@@ -522,7 +456,7 @@ namespace CourseProject.MenuObjects
                 }
             }
 
-            AddInventoryListToList();
+            gym.AddInventoryListToList();
         }
     }
 }

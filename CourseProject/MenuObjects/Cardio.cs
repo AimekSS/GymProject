@@ -6,7 +6,10 @@
         {
 
         }
-        public Cardio(string category,  string name, int quantity) : base ( category,    name,  quantity) { }
 
+        public Cardio(string category,  string name, int quantity) : base ( category,    name,  quantity) 
+        { 
+
+        }
     }
 }

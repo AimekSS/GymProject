@@ -16,7 +16,8 @@ namespace CourseProject.Users
         public DateTime BirthData { get; set; }
         public Subscription userSubscription = new Subscription();
         public string Login { get; set; }
-        string Password { get; set; }
+        [NonSerialized] public string Password;
+
         public int Id;
 
 
@@ -100,13 +101,6 @@ namespace CourseProject.Users
             Password = verificationData;
 
             return verificationData;
-        }
-
-        public string[] GetLoginAndPassword()
-        {
-            string[] credentials = { Login, Password };
-
-            return credentials;
         }
     }
 }
